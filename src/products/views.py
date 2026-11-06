@@ -42,9 +42,9 @@ def product_detail(request: HttpRequest, category_slug: str, pk: int) -> HttpRes
         The rendered product detail page, or a redirect after a valid review.
     """
     product = get_object_or_404(
-        Product.objects.select_related("category").prefetch_related("tags").annotate(
-            avg_rating=Avg("comments__rating"), total_ratings=Count("comments")
-        ),
+        Product.objects.select_related("category")
+        .prefetch_related("tags")
+        .annotate(avg_rating=Avg("comments__rating"), total_ratings=Count("comments")),
         pk=pk,
         category__slug=category_slug,
     )
