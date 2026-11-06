@@ -46,7 +46,7 @@ In order to quickly get started with the project follow these steps:
 
 The project is modularized into several apps:
 
-- `products`: Manages product listings and categories
+- `products`: Manages product listings, categories, product tags and customer reviews
 - `users`: Handles user authentication and registration.
 
 Each app has its own `models.py`, `views.py`, `urls.py`, and `admin.py` files to encapsulate its functionality.
@@ -66,6 +66,22 @@ To configure the project, follow these steps:
     - `ALLOWED_HOSTS`: provide a list of comma-separated values for the allowed host configuration => Defaults to `'localhost, 127.0.0.1, 0.0.0.0'`
     - `DEBUG`: Set to `True` for development or `False` for production. Defaults to `True`
 
+### Managing product tags
+
+Products can be labeled with tags, for example `eco-friendly` or `bestseller`.
+Tags are optional, so a product does not need to have any.
+
+1. Create a superuser (see the Quickstart) and open the admin panel at `localhost:8000/admin`.
+1. Open **Tags** and click **Add** to create a new tag.
+   The fields `created_at` and `updated_at` are set automatically and are read-only.
+1. Open a product under **Products** and select one or more tags.
+   In the product list you can also filter the products by tag.
+1. Open the product detail page in the shop.
+   The assigned tags are shown under the heading "Product-Tags".
+   If a product has no tags, the page shows "no tags available".
+
+After a review has been submitted, the review form is cleared again.
+
 ### Running the linting tools
 
 > [!tip]
@@ -80,6 +96,8 @@ To run code-quality checks that check the code-style and formatting you can run 
 black .
 # to apply correct sorting for imports
 isort .
+# to check the code style, run this in the project root so the settings from pyproject.toml are used
+flake8 src
 ```
 
 #### When to run this
