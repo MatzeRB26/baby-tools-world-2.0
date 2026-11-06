@@ -81,9 +81,17 @@ def product_detail(request: HttpRequest, category_slug: str, pk: int) -> HttpRes
                 comment.save()
                 messages.success(request, "Thank you for your rating.")
 
+            request.session["review_submitted"] = True
             return redirect("product_detail", category_slug=category_slug, pk=product.pk)
     else:
-        form = CommentForm()
+        # Right after a successful submit the form is empty, otherwise it is pre-filled with the existing review
+        just_submitted: bool = request.session.pop("review_submitted", False)
+        initial: dict[str, int | str] = {}
+        if request.user.is_authenticated and not just_submitted:
+            existing = product.comments.filter(user=request.user).first()
+            if existing:
+                initial = {"rating": existing.rating, "text": existing.text}
+        form = CommentForm(initial=initial)
 
     return render(
         request,
