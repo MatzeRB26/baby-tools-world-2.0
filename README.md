@@ -6,6 +6,34 @@ The project was developed for educational purposes only and therefore has no cla
 > [!NOTE]
 > This project assumes you already know the python programming language
 
+## Features
+
+The shop offers the following main features.
+
+### Product catalog and categories
+
+Visitors can browse all products on the homepage and filter them by category using the category list on the left. Each product card shows the image, price, description and the average rating.
+
+### Product detail page
+
+Every product has a detail page with its description, price, image and rating summary. The page also lists related products from the same category.
+
+### Customer reviews
+
+Visitors can rate a product with one to five stars and add an optional comment. Logged-in users have one review per product, which they can update later, while guests enter a name and an email address. After a review has been submitted, the form is cleared.
+
+### User accounts
+
+Users can sign up, sign in and sign out. Logged-in users can write reviews under their own name.
+
+### Product tags
+
+Products can be labeled with optional tags, for example `eco-friendly` or `bestseller`. The tags are shown under the heading "Product-Tags" on the detail page, or "no tags available" if a product has none. Tags are managed in the Django admin panel, where the product list can also be filtered by tag.
+
+### Administration
+
+Products, categories, tags and reviews are managed in the Django admin panel at `/admin`. The command `python manage.py seed_db` fills the database with sample categories and products.
+
 ## Prerequisites
 
 In order to seamlessly interact with the repository and the software it contains you need to following tools preinstalled:
