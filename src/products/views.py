@@ -1,12 +1,22 @@
 from django.contrib import messages
 from django.db.models import Avg, Count
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import CommentForm
 from .models import Category, Comment, Product
 
 
-def product_list(request, category_slug=None):
+def product_list(request: HttpRequest, category_slug: str | None = None) -> HttpResponse:
+    """Render the product overview, optionally filtered by category.
+
+    Args:
+        request: The current HTTP request.
+        category_slug: Optional slug of a category to filter the products by.
+
+    Returns:
+        The rendered product list page.
+    """
     categories = Category.objects.all()
     products = Product.objects.select_related("category").annotate(
         avg_rating=Avg("comments__rating"), total_ratings=Count("comments")
@@ -16,11 +26,25 @@ def product_list(request, category_slug=None):
     return render(request, "products.html", {"categories": categories, "products": products})
 
 
-def product_detail(request, category_slug, pk):
+def product_detail(request: HttpRequest, category_slug: str, pk: int) -> HttpResponse:
+    """Render the product detail page and handle review submissions.
+
+    Shows the product with its tags, reviews and related products. A valid
+    POST creates or updates the review and redirects back to this page, which
+    then shows an empty review form.
+
+    Args:
+        request: The current HTTP request.
+        category_slug: Slug of the category the product belongs to.
+        pk: Primary key of the product.
+
+    Returns:
+        The rendered product detail page, or a redirect after a valid review.
+    """
     product = get_object_or_404(
-        Product.objects.select_related("category").annotate(
-            avg_rating=Avg("comments__rating"), total_ratings=Count("comments")
-        ),
+        Product.objects.select_related("category")
+        .prefetch_related("tags")
+        .annotate(avg_rating=Avg("comments__rating"), total_ratings=Count("comments")),
         pk=pk,
         category__slug=category_slug,
     )
@@ -37,8 +61,8 @@ def product_detail(request, category_slug, pk):
     if request.method == "POST":
         form = CommentForm(request.POST, initial={"user": request.user if request.user.is_authenticated else None})
         if form.is_valid():
-            rating = form.cleaned_data["rating"]
-            text = form.cleaned_data.get("text", "")
+            rating: int = form.cleaned_data["rating"]
+            text: str = form.cleaned_data.get("text", "")
 
             if request.user.is_authenticated:
                 # Upsert: update existing comment or create a new one
@@ -57,11 +81,13 @@ def product_detail(request, category_slug, pk):
                 comment.save()
                 messages.success(request, "Thank you for your rating.")
 
+            request.session["review_submitted"] = True
             return redirect("product_detail", category_slug=category_slug, pk=product.pk)
     else:
-        # Pre-fill form for authenticated user with existing comment (if any)
-        initial = {}
-        if request.user.is_authenticated:
+        # Right after a successful submit the form is empty, otherwise it is pre-filled with the existing review
+        just_submitted: bool = request.session.pop("review_submitted", False)
+        initial: dict[str, int | str] = {}
+        if request.user.is_authenticated and not just_submitted:
             existing = product.comments.filter(user=request.user).first()
             if existing:
                 initial = {"rating": existing.rating, "text": existing.text}

@@ -14,12 +14,38 @@ class Category(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Return the category name.
+
+        Returns:
+            The name of the category.
+        """
         return self.name
 
     class Meta:
         ordering = ["name"]
         verbose_name_plural = "Categories"
+
+
+class Tag(models.Model):
+    """A label that can be attached to any number of products."""
+
+    name = models.CharField(max_length=50, unique=True)
+
+    # Both timestamps are set automatically and are therefore read-only.
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self) -> str:
+        """Return the tag name.
+
+        Returns:
+            The name of the tag.
+        """
+        return self.name
+
+    class Meta:
+        ordering = ["name"]
 
 
 class Product(models.Model):
@@ -29,22 +55,38 @@ class Product(models.Model):
     image = models.ImageField(upload_to="imgs/products/", null=True, blank=True)
     name = models.CharField(max_length=80, blank=False, null=False)
     price = models.DecimalField(max_digits=6, decimal_places=2, validators=[MinValueValidator(Decimal("0.00"))])
+    tags = models.ManyToManyField(Tag, blank=True, related_name="products")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     # NEW helper properties
     @property
-    def average_rating(self):
+    def average_rating(self) -> float:
+        """Calculate the average rating of the product.
+
+        Returns:
+            The average rating, or 0 if the product has no ratings yet.
+        """
         from django.db.models import Avg
 
         return self.comments.aggregate(a=Avg("rating"))["a"] or 0
 
     @property
-    def rating_count(self):
+    def rating_count(self) -> int:
+        """Count the ratings of the product.
+
+        Returns:
+            The number of comments with a rating for this product.
+        """
         return self.comments.count()
 
     def __str__(self) -> str:
+        """Return the product name.
+
+        Returns:
+            The name of the product.
+        """
         return self.name
 
 
@@ -69,6 +111,11 @@ class Comment(models.Model):
         ]
         indexes = [models.Index(fields=["product", "created_at"])]
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Return a short description of the comment.
+
+        Returns:
+            The author name followed by the rating.
+        """
         who = self.user.username if self.user else (self.guest_name or "Guest")
         return f"{who} - {self.rating}★"
